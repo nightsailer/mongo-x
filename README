@@ -1,0 +1,122 @@
+NAME
+    MongoX - DSL sugar for MongoDB
+
+VERSION
+    version 0.001
+
+SYNOPSIS
+        # quick bootstrap, add connection and switch to db:'test'
+        use MongoX { host => 'mongodb://127.0.0.1',db => 'test' };
+
+        # common way
+        use MongoX;
+        #register default connection;
+        add_connection host => '127.0.0.1';
+        # switch to default connection;
+        use_connection;
+        # use database 'test'
+        use_db 'test';
+    
+        #add/register another connection with id "remote2"
+        add_connection host => '192.168.1.1',id => 'remote2';
+    
+        # switch to this connection
+        use_connection 'remote2';
+    
+        #get a collection object (from the db in current context)
+        my $foo = get_collection 'foo';
+    
+        # use 'foo' as default context collection
+        use_collection 'foo';
+    
+        # use context's db/collection
+        say 'total rows:',context_collection->count();
+    
+        my $id = context_collection->insert({ name => 'Pan', home => 'Beijing' });
+        my $gridfs = context_db->get_gridfs;
+        ...
+
+DESCRIPTION
+    MongoX is a light wrapper to MongoDB driver, it provide a versy simple
+    but handy DSL syntax. It also will provide some usefull helpers like
+    builtin mongoshell, you can quick work with MongoDB.
+
+ATTRIBUTES
+  context_db
+        my $db = context_db;
+
+    Return current MongoDB::Database object in context;
+
+  context_connection
+        my $con = context_connection;
+
+    Return current MongoDB::Connection object in context.
+
+  context_collection
+        my $col = context_collection;
+
+    Return current MongoDB::Collection object in context, you can replace
+    the object with "use_collection".
+
+METHODS
+  use_connection
+        # create a default connection
+        use_connection;
+        # use another connection with id:'con2'
+        use_connection 'con2';
+
+    Switch to given connection, set the context connection to this
+    connection.
+
+  use_db
+        use_db 'foo';
+
+    Switch to the database, set the context database to this database;
+
+  use_collection
+        use_collection 'user'
+
+    Set 'user' collection as context collection.
+
+  add_connection
+        add_connection id => 'default', host => 'mongodb://127.0.0.1:27017'
+
+    Register a connnection with the id, if omit, will add as default
+    connection. All options exclude 'id' will direct pass to
+    MongoDB::Connection.
+
+  boot
+        boot host => 'mongodb://127.0.0.1',db => 'test'
+        # same as:
+        add_connection host => 'mongodb://127.0.0.1', id => 'default';
+        use_connection;
+        use_db 'test';
+
+    Boot is equivalent to call add_connection,use_connection,use_db.
+
+OPTIONS
+    MongoX takes a set of options for the class construction at compile time
+    as a HASH parameter to the "use" line.
+
+    As a convenience, you can pass the default connection parameters and
+    default database, then when MongoX import, it will apply these options
+    to "add_connection" and "use_db", so the following code:
+
+        use MongoX { host => 'mongodb://127.0.0.1',db => 'test' };
+
+    is equivalent to:
+
+        use MongoX;
+        add_connection host => 'mongodb://127.0.0.1';
+        use_connection;
+        use_db 'test';
+
+AUTHOR
+    Pan Fan(nightsailer) <nightsailer at gmail dot com>
+
+COPYRIGHT AND LICENSE
+    This software is copyright (c) 2010 by Pan Fan(nightsailer).
+
+    This is free software; you can redistribute it and/or modify it under
+    the same terms as the Perl 5 programming language system itself.
+
