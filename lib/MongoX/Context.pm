@@ -5,14 +5,12 @@ use warnings;
 
 use Carp 'croak';
 use MongoDB;
-
+use Data::Dumper;
 my %registry = ();
 my %connection_pool = ();
 
 # context
-my $context_connection;
-my $context_collection;
-my $context_db;
+our ($_context_connection,$_context_db,$_context_collection);
 
 sub get_connection {
     my ($id) = @_;
@@ -30,11 +28,11 @@ sub get_db {
     if ($connection_id) {
         return get_connection($connection_id)->get_database($dbname);
     }
-    return $context_connection->get_database($dbname);
+    return $_context_connection->get_database($dbname);
 }
 
 sub use_db {
-    $context_db = $context_connection->get_database(shift);
+    $_context_db = $_context_connection->get_database(shift);
 }
 
 sub add_connection {
@@ -46,25 +44,25 @@ sub add_connection {
 sub use_connection {
     my ($id) = @_;
     $id ||= 'default';
-    $context_connection = get_connection($id);
+    $_context_connection = get_connection($id);
 }
 
 sub use_collection {
     my ($collection_name) = @_;
-    $context_collection = $context_db->get_collection($collection_name);
+    $_context_collection = $_context_db->get_collection($collection_name);
 }
 
 sub get_collection {
     my ($collection_name) = @_;
-    $context_db->get_collection($collection_name);
+    $_context_db->get_collection($collection_name);
 }
 
 
-sub context_db { $context_db }
+sub context_db { $_context_db }
 
-sub context_connection { $context_connection }
+sub context_connection { $_context_connection }
 
-sub context_collection { $context_collection }
+sub context_collection { $_context_collection }
 
 sub boot {
     my (%opts) = @_;
@@ -75,9 +73,43 @@ sub boot {
 }
 
 sub reset {
-    ($context_connection,$context_collection,$context_db) = undef;
+    ($_context_connection,$_context_collection,$_context_db) = undef;
     %registry = ();
     %connection_pool = ();
+}
+
+sub with_context(&@) {
+    local ($_context_connection,$_context_db,$_context_collection) = ($_context_connection,$_context_db,$_context_collection);
+    if (@_ == 1) {
+        return shift->();
+    }
+    my $code = shift;
+    my %new_context = @_;
+    if ($new_context{connection}) {
+        if (ref $new_context{connection} eq 'MongoDB::Connection') {
+            $_context_db = $new_context{connection};
+        }
+        else {
+            use_connection $new_context{connection};
+        }
+    }
+    if ($new_context{db}) {
+        if (ref $new_context{db} eq 'MongoDB::Database') {
+            $_context_db = $new_context{db};
+        }
+        else {
+            use_db $new_context{db};
+        }
+    }
+    if ($new_context{collection}) {
+        if (ref $new_context{collection} eq 'MongoDB::Collection') {
+            $_context_collection = $new_context{collection};
+        }
+        else {
+            use_collection $new_context{collection};
+        }
+    }
+    $code->();
 }
 
 1;

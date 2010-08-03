@@ -49,7 +49,7 @@
 [CodeLayout::ProhibitTrailingWhitespace]
     severity = 5
 
-
+[-Subroutines::ProhibitSubroutinePrototypes]
 [-InputOutput::ProhibitTwoArgOpen]
 [-InputOutput::ProhibitBarewordFileHandles]
 

@@ -1,0 +1,9 @@
+Revision history for MongoX
+{{$NEXT}}
+
+0.002
+  - new "with_context" syntax to build a context sandbox
+  - minor docs fixes
+
+0.001 first release
+  - basic DSL syntax

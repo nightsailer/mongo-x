@@ -16,6 +16,7 @@ our @EXPORT = qw(
     context_db
     context_connection
     context_collection
+    with_context
 );
 
 
@@ -108,6 +109,70 @@ Boot is equivalent to call add_connection,use_connection,use_db.
 =cut
 sub boot { MongoX::Context::boot(@_) }
 
+=method with_context(&@)
+
+    
+    # sandbox
+    use_db 'test';
+    with_context {
+        use_db 'tmp_db';
+        # now context db is 'tmp_db'
+        ...
+    };
+    # context db auto restor to 'test'
+    
+    # temp context
+    with_context {
+        context_collection->do_something;
+    } connection => 'id2', db => 'test2', 'collecton' => 'user';
+    
+    # alternate style
+    my $db2 = context_connection->get_database('test2');
+    with_context {
+        # context db is $db2,collection is 'foo'
+        print context_collection->count;
+    } db => $db2, 'collection' => 'foo';
+
+C<with_context> let you create a temporary context(sandbox) to invoke the code block.
+Before execute the code block, current context will be saved, them build a temporary
+context to invoke the code, after code executed, saved context will be restored.
+
+You can explicit setup the sandbox context include connection,db,collection,
+or just applied from parent container(context).
+
+with_context allow nested, any with_context will build its context sanbox to run
+the attached code block.
+
+    use_db 'test';
+
+    with_context {
+        # context db is 'db1'
+        with_context {
+            # context db is 'db2'
+        } db => 'db2';
+        # context db restore to 'db1'
+    } db => 'db1';
+
+    # context db restore to 'test'
+
+with_context options key:
+
+=over
+
+=item connection =>  connection id or L<MongoDB::Connection>
+
+=item db =>  database name or L<MongoDB::Database>
+
+=item connection =>  connection id or L<MongoDB::Connection>
+
+=item collection =>  collection name or L<MongoDB::Collection>
+
+=back
+
+=cut
+
+sub with_context(&@) { MongoX::Context::with_context {shift}, @_ }
+
 
 sub import {
     my ( $class,   %options ) = @_;
@@ -123,7 +188,7 @@ __END__
 =head1 SYNOPSIS
 
     # quick bootstrap, add connection and switch to db:'test'
-    use MongoX { host => 'mongodb://127.0.0.1',db => 'test' };
+    use MongoX ( host => 'mongodb://127.0.0.1',db => 'test' );
 
     # common way
     use MongoX;
@@ -155,10 +220,10 @@ __END__
 
 =head1 DESCRIPTION
 
-MongoX is a light wrapper to L<MongoDB> driver, it provide a versy simple but handy DSL syntax.
+MongoX is a light wrapper to L<MongoDB> driver, it provide a very simple but handy DSL syntax.
 It also will provide some usefull helpers like builtin mongoshell, you can quick work with MongoDB.
 
-=head1 OPTIONS
+=head1 OVERVIEW
 
 MongoX takes a set of options for the class construction at compile time
 as a HASH parameter to the "use" line.
@@ -167,7 +232,7 @@ As a convenience, you can pass the default connection parameters and default dat
 then when MongoX import, it will apply these options to L</add_connection> and L</use_db>,
 so the following code:
 
-    use MongoX { host => 'mongodb://127.0.0.1',db => 'test' };
+    use MongoX ( host => 'mongodb://127.0.0.1',db => 'test' );
 
 is equivalent to:
 
@@ -175,3 +240,6 @@ is equivalent to:
     add_connection host => 'mongodb://127.0.0.1';
     use_connection;
     use_db 'test';
+
+C<context_connection>,C<context_db>, C<context_collection> are implicit MongoDB::Connection,
+MongoDB::Database and MongoDB::Collection.
