@@ -1,8 +1,22 @@
 use strict;
 use warnings;
-use Test::More tests => 10;
+use Test::More;
+my $host;
+BEGIN {
+    $host = 'localhost';
+    # check test
+    if (exists $ENV{MONGOD}) {
+        $host = $ENV{MONGOD};
+    }
+    eval "use MongoX host => '$host', db => 'mongox_test'";
+    if ($@) {
+        plan skip_all => $@;
+    }
+    else {
+        plan tests => 22;
+    }
+}
 
-use MongoX host => 'mongodb://127.0.0.1', db => 'mongox_test' ;
 use MongoX::Context;
 
 isa_ok(context_connection,'MongoDB::Connection');
@@ -22,16 +36,16 @@ context_db->drop();
 
 # with_context
 {
-    
+
     MongoX::Context::reset;
-    
-    boot host => 'mongodb://127.0.0.1',db => 'mongo_test2';
-    
+
+    boot host => $host,db => 'mongo_test2';
+
     with_context {
         use_db 'test2';
         use_collection 'foo';
     };
-    is(context_connection->host,'mongodb://127.0.0.1','with_context/sandbox/connection');
+    is(context_connection->host,$host,'with_context/sandbox/connection');
     is(context_db->name,'mongo_test2','with_context/sandbox/db');
     is(context_collection,undef,'with_context/sandbox/collection');
 
@@ -54,8 +68,41 @@ context_db->drop();
 
     is(context_db->name,'mongo_test2','with_context/sandbox/restor db,outer');
     is(context_collection,undef,'with_context/sandbox/restor collection,outer');
-    
+
     context_db->drop;
 }
 
+# for_dbs
+{
+    my $i = 1;
+    for_dbs {
+        is(context_db->name,"test$i",'for_dbs/list');
+        $i++;
+        context_db->drop;
+    } 'test1','test2','test3';
 
+    $i = 1;
+    for_dbs {
+        is(context_db->name,"test$i",'for_dbs/list');
+        $i++;
+        context_db->drop;
+    } qw(test1 test2 test3);
+}
+
+{
+    use_db 'test';
+
+    my $i=1;
+    for_collections {
+        is(context_collection->name,"test$i",'for_collections/list');
+        $i++;
+    } 'test1','test2','test3';
+
+    $i=1;
+    for_collections {
+        is(context_collection->name,"test$i",'for_collections/list');
+        $i++;
+    } qw(test1 test2 test3);
+
+    context_db->drop;
+}

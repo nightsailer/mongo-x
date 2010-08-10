@@ -3,7 +3,8 @@ package MongoX;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
+
 use parent qw( Exporter );
 use MongoX::Context;
 
@@ -17,6 +18,9 @@ our @EXPORT = qw(
     context_connection
     context_collection
     with_context
+    for_dbs
+    for_collections
+    for_connections
 );
 
 
@@ -109,7 +113,7 @@ Boot is equivalent to call add_connection,use_connection,use_db.
 =cut
 sub boot { MongoX::Context::boot(@_) }
 
-=method with_context(&@)
+=method with_context BLOCK db => 'dbname', connection => 'connection_id', collection => 'foo'
 
     
     # sandbox
@@ -124,7 +128,7 @@ sub boot { MongoX::Context::boot(@_) }
     # temp context
     with_context {
         context_collection->do_something;
-    } connection => 'id2', db => 'test2', 'collecton' => 'user';
+    } connection => 'id2', db => 'test2', 'collection' => 'user';
     
     # alternate style
     my $db2 = context_connection->get_database('test2');
@@ -173,14 +177,62 @@ with_context options key:
 
 sub with_context(&@) { MongoX::Context::with_context {shift}, @_ }
 
+=method for_dbs BLOCK, database List 
+
+    for_dbs {
+        print context_db->name;
+    } 'test1','test2','test3;
+
+    for_dbs {
+
+        print context_db->name;
+
+    } context_connection->database_names;
+
+Evaluates the code BLOCK for each database of the list. In block scope, context_db will
+switch to the list value, and $_ is alias of this context_db value.
+
+=cut
+
+sub for_dbs(&@) { MongoX::Context::for_dbs(shift,@_) };
+
+=method for_connections BLOCK connection_id_list
+
+    for_connections {
+        for_dbs { map { print $_ } context_db->collection_names } $_->database_names;
+    } 'con_id1', 'con_id2'
+
+Evaluates the code BLOCK against each connection of connection id list. In block scope,
+context_connection will switch to the list value, and $_ is alais of the current context_connection.
+
+=cut
+
+sub for_connections(&@) { MongoX::Context::for_connections(shift,@_) };
+
+=method for_collections BLOCK collection_list
+
+    # print out all collection's count in the db
+    for_collections {
+        say $_->name, ' count:', db_count;
+    } context_db->collection_names;
+
+    # reindex some collections
+    for_collections { db_re_index } 'foo','foo2','foo3';
+
+    # alternate
+    for_collections { db_re_index } qw(foo foo2 foo3);
+    # alternate
+    for_collections { db_re_index } ('foo','foo2','foo3');
+
+=cut
+
+sub for_collections(&@) { MongoX::Context::for_collections(shift,@_) };
 
 sub import {
     my ( $class,   %options ) = @_;
     $class->export_to_level( 1, $class, @EXPORT );
     boot %options if %options;
 }
-
-
 
 1;
 __END__
@@ -216,7 +268,13 @@ __END__
     
     my $id = context_collection->insert({ name => 'Pan', home => 'Beijing' });
     my $gridfs = context_db->get_gridfs;
-    ...
+    
+    # loop dbs/collections
+    for_dbs{
+        for_collections {
+            $context_collection->ensureIndex({ 'created_on' => 1 });
+        } context_db->collection_names;
+    } 'db1','db2';
 
 =head1 DESCRIPTION
 
@@ -243,3 +301,36 @@ is equivalent to:
 
 C<context_connection>,C<context_db>, C<context_collection> are implicit MongoDB::Connection,
 MongoDB::Database and MongoDB::Collection.
+
+=head2 DSL keywords
+
+=over
+
+=item use_connection
+
+=item use_db
+
+=item use_collection
+
+=item with_context
+
+=back
+
+use_* keywords can make/switch implicit MongoDB object in context.
+
+with_context allow build a sanbox to execute code block and do something,
+the context be restored when out the block.
+
+
+=over
+
+=item for_connections
+
+=item for_dbs
+
+=item for_collections
+
+=back
+
+These are loop keywords, it will switch related context object in the given list and loop run
+the code block.

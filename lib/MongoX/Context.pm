@@ -112,6 +112,33 @@ sub with_context(&@) {
     $code->();
 }
 
+sub for_collections {
+    my ($code,@cols) = @_;
+    for my $col (@cols){
+        local ($_context_connection,$_context_db,$_context_collection) = ($_context_connection,$_context_db,$_context_collection);
+        use_collection $col;
+        $code->($_context_collection);
+    }
+}
+
+sub for_dbs {
+    my ($code,@dbs) = @_;
+    for my $db (@dbs) {
+        local ($_context_connection,$_context_db,$_context_collection) = ($_context_connection,$_context_db,$_context_collection);
+        use_db $db;
+        $code->($_context_db);
+    }
+}
+
+sub for_connections {
+    my ($code,@connections) = @_;
+    for my $con_id (@connections){
+        local ($_context_connection,$_context_db,$_context_collection) = ($_context_connection,$_context_db,$_context_collection);
+        use_connection $con_id;
+        $code->($_context_collection);
+    }
+}
+
 1;
 __END__
 
