@@ -10,6 +10,7 @@ Command helpers
   * admin_get_shard_version
   * admin_rename_collection
   * admin_set_shard_version
+  * admin_top
 
 - Common command list:
   * db_availablequeryoptions
@@ -38,3 +39,9 @@ Command helpers
 GridFS stuff
 =========
 - Dump/import file to gridfs
+
+Scripts stuff (standalone module?)
+=========
+- mongox-tar
+- mongox-admin
+- mongox-replica

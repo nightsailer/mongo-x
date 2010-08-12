@@ -34,7 +34,13 @@ SYNOPSIS
     
         my $id = context_collection->insert({ name => 'Pan', home => 'Beijing' });
         my $gridfs = context_db->get_gridfs;
-        ...
+    
+        # loop dbs/collections
+        for_dbs{
+            for_collections {
+                $context_collection->ensureIndex({ 'created_on' => 1 });
+            } context_db->collection_names;
+        } 'db1','db2';
 
 DESCRIPTION
     MongoX is a light wrapper to MongoDB driver, it provide a very simple
@@ -60,6 +66,29 @@ OVERVIEW
 
     "context_connection","context_db", "context_collection" are implicit
     MongoDB::Connection, MongoDB::Database and MongoDB::Collection.
+
+  Options
+    host => mongodb server, mongodb connection scheme
+    db => default database
+    utf8 => Turn on/off UTF8 flag. default is turn on utf8 flag.
+
+  DSL keywords
+    use_connection
+    use_db
+    use_collection
+    with_context
+
+    use_* keywords can make/switch implicit MongoDB object in context.
+
+    with_context allow build a sanbox to execute code block and do
+    something, the context be restored when out the block.
+
+    for_connections
+    for_dbs
+    for_collections
+
+    These are loop keywords, it will switch related context object in the
+    given list and loop run the code block.
 
 ATTRIBUTES
   context_db
@@ -103,7 +132,12 @@ METHODS
 
     Register a connnection with the id, if omit, will add as default
     connection. All options exclude 'id' will direct pass to
-    MongoDB::Connection.
+    MongoDB::Connection. The host accept standard mongoDB uri scheme:
+
+    mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:p
+    ortN]]][/database]
+
+    More about, see <http://www.mongodb.org/display/DOCS/Connections>.
 
   boot
         boot host => 'mongodb://127.0.0.1',db => 'test'
@@ -114,7 +148,7 @@ METHODS
 
     Boot is equivalent to call add_connection,use_connection,use_db.
 
-  with_context(&@)
+  with_context BLOCK db => 'dbname', connection => 'connection_id', collection => 'foo'
         # sandbox
         use_db 'test';
         with_context {
@@ -127,7 +161,7 @@ METHODS
         # temp context
         with_context {
             context_collection->do_something;
-        } connection => 'id2', db => 'test2', 'collecton' => 'user';
+        } connection => 'id2', db => 'test2', 'collection' => 'user';
     
         # alternate style
         my $db2 = context_connection->get_database('test2');
@@ -164,8 +198,59 @@ METHODS
 
     connection => connection id or MongoDB::Connection
     db => database name or MongoDB::Database
-    connection => connection id or MongoDB::Connection
     collection => collection name or MongoDB::Collection
+
+  for_dbs BLOCK, database List
+        for_dbs {
+            print context_db->name;
+        } 'test1','test2','test3;
+
+        for_dbs {
+
+            print context_db->name;
+
+        } context_connection->database_names;
+
+    Evaluates the code BLOCK for each database of the list. In block scope,
+    context_db will switch to the list value, and $_ is alias of this
+    context_db value.
+
+  for_connections BLOCK connection_id_list
+        for_connections {
+            for_dbs { map { print $_ } context_db->collection_names } $_->database_names;
+        } 'con_id1', 'con_id2'
+
+    Evaluates the code BLOCK against each connection of connection id list.
+    In block scope, context_connection will switch to the list value, and $_
+    is alais of the current context_connection.
+
+  for_collections BLOCK collection_list
+        # print out all collection's count in the db
+        for_collections {
+            say $_->name, ' count:', db_count;
+        } context_db->collection_names;
+
+        # reindex some collections
+        for_collections { db_re_index } 'foo','foo2','foo3';
+
+        # alternate
+        for_collections { db_re_index } qw(foo foo2 foo3);
+        # alternate
+        for_collections { db_re_index } ('foo','foo2','foo3');
+
+Repository
+    Github: <http://github.com/nightsailer/mongo-x>
+
+SEE ALSO
+    MongoDB manual: <http://www.mongodb.org/display/DOCS/Manual>
+
+    Official MongoDB driver: MongoDB or
+    <http://github.com/mongodb/mongo-perl-driver>
+
+    My fork: <http://github.com/nightsailer/mongo-perl-driver>
+
+    My blog about this project (Chinese only!):
+    <http://nightsailer.com/mongox>
 
 AUTHOR
     Pan Fan(nightsailer) <nightsailer at gmail dot com>
