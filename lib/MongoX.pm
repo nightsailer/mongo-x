@@ -95,6 +95,11 @@ sub context_collection { MongoX::Context::context_collection }
 
 Register a connnection with the id, if omit, will add as default connection.
 All options exclude 'id' will direct pass to L<MongoDB::Connection>.
+The host accept standard mongoDB uri scheme:
+
+mongodb://[username:password@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/database]
+
+More about, see L<http://www.mongodb.org/display/DOCS/Connections>.
 
 =cut
 
@@ -166,8 +171,6 @@ with_context options key:
 =item connection =>  connection id or L<MongoDB::Connection>
 
 =item db =>  database name or L<MongoDB::Database>
-
-=item connection =>  connection id or L<MongoDB::Connection>
 
 =item collection =>  collection name or L<MongoDB::Collection>
 
@@ -302,6 +305,18 @@ is equivalent to:
 C<context_connection>,C<context_db>, C<context_collection> are implicit MongoDB::Connection,
 MongoDB::Database and MongoDB::Collection.
 
+=head2 Options
+
+=over
+
+=item host => mongodb server, mongodb connection scheme
+
+=item db => default database
+
+=item utf8 => Turn on/off UTF8 flag. default is turn on utf8 flag.
+
+=back
+
 =head2 DSL keywords
 
 =over
@@ -334,3 +349,17 @@ the context be restored when out the block.
 
 These are loop keywords, it will switch related context object in the given list and loop run
 the code block.
+
+=head1 Repository
+
+Github: L<http://github.com/nightsailer/mongo-x>
+
+=head1 SEE ALSO
+
+MongoDB manual: L<http://www.mongodb.org/display/DOCS/Manual>
+
+Official MongoDB driver: L<MongoDB> or L<http://github.com/mongodb/mongo-perl-driver>
+
+My fork: L<http://github.com/nightsailer/mongo-perl-driver>
+
+My blog about this project (Chinese only!): L<http://nightsailer.com/mongox>

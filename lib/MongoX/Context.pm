@@ -67,6 +67,7 @@ sub context_collection { $_context_collection }
 sub boot {
     my (%opts) = @_;
     return unless %opts;
+    $MongoDB::BSON::utf8_flag_on = $opts{utf8} ? 1 : 0 if exists $opts{utf8};
     add_connection(%opts);
     use_connection;
     use_db($opts{db}) if exists $opts{db};
