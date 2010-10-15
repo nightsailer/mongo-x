@@ -56,6 +56,10 @@ my @TAG_COMMON = qw(
     db_find_all
     db_find_and_modify
     db_increment
+    db_ensure_index
+    db_drop_index
+    db_drop_indexes
+    db_get_indexes
 );
 # TODO: Replica Set commands
 my @TAG_RS = qw(
@@ -720,6 +724,58 @@ Shortcut of L<MongoDB::Collection/find_one>.
 sub db_find_one {
     croak 'context_collection not defined,forget(use_collection?)' unless _collection;
     _collection->find_one(@_);
+}
+
+=method db_ensure_index(\%keys,\%options?)
+
+    $result = db_ensure_index { foo => 1, name => 1};
+
+Shortcut of L<MongoDB::Collection/ensure_index>.
+
+=cut
+
+sub db_ensure_index {
+    croak 'context_collection not defined,forget(use_collection?)' unless _collection;
+    return _collection->ensure_index(@_);
+}
+
+=method db_drop_index($index_name)
+
+    db_drop_index { 'name_1' };
+
+Shortcut of L<MongoDB::Collection/drop_index>.
+
+=cut
+
+sub db_drop_index {
+    croak 'context_collection not defined,forget(use_collection?)' unless _collection;
+    return _collection->drop_index(@_);
+}
+
+=method db_drop_indexes
+
+    db_drop_indexes;
+
+Shortcut of L<MongoDB::Collection/drop_indexes>.
+
+=cut
+
+sub db_drop_indexes {
+    croak 'context_collection not defined,forget(use_collection?)' unless _collection;
+    return _collection->drop_indexes(@_);
+}
+
+=method db_get_indexes
+
+    db_get_indexes;
+
+Shortcut of L<MongoDB::Collection/get_indexes>.
+
+=cut
+
+sub db_get_indexes {
+    croak 'context_collection not defined,forget(use_collection?)' unless _collection;
+    return _collection->get_indexes;
 }
 
 

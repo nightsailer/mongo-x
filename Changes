@@ -1,5 +1,8 @@
 Revision history for MongoX
 
+0.003 Fri Oct 15 2010 13:14:09 GMT+0800 (CST)
+  - add db_ensure_index/db_drop_index/db_get_indexes helpers
+ 
 0.002 Thu Aug 12 2010 17:56:19 GMT+0800 (CST)
   - new package: MongoX::Helper, wrap most useful mongodb commands.
   - new keywords: with_context, for_dbs, for_connections, for_collections

@@ -17,7 +17,7 @@ BEGIN {
         plan skip_all => $@;
     }
     else {
-        plan tests => 33;
+        plan tests => 36;
     }
 }
 
@@ -27,7 +27,7 @@ my $result = db_list_commands;
 
 is($result->{resync}->{adminOnly},1,'db_list_commands');
 
-note explain $result;
+# note explain $result;
 
 $result = db_stats;
 
@@ -60,8 +60,14 @@ ok(exists $result->{inprog},'db_current_op');
 
 {
     use_collection 'foo_test';
-    context_collection->ensure_index({ 'name' => 1 });
+    db_ensure_index({ name => 1});
+    my $indexes = db_get_indexes;
+    is($indexes,2,'db_get_indexes/db_ensure_index');
+    my $ok = db_drop_index('name_1');
+    is($ok->{ok},1,'db_drop_index');
     ok(db_re_index,'db_re_index');
+    db_drop_indexes;
+    is(db_get_indexes,1,'db_drop_indexes');
     context_collection->drop;
 }
 
