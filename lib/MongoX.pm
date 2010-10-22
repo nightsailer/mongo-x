@@ -3,7 +3,7 @@ package MongoX;
 use strict;
 use warnings;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use parent qw( Exporter );
 use MongoX::Context;
@@ -178,7 +178,7 @@ with_context options key:
 
 =cut
 
-sub with_context(&@) { MongoX::Context::with_context {shift}, @_ }
+sub with_context(&@) { MongoX::Context::with_context(@_) }
 
 =method for_dbs BLOCK, database List 
 

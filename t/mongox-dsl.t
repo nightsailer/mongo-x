@@ -13,7 +13,7 @@ BEGIN {
         plan skip_all => $@;
     }
     else {
-        plan tests => 22;
+        plan tests => 29;
     }
 }
 
@@ -105,4 +105,12 @@ context_db->drop();
     } qw(test1 test2 test3);
 
     context_db->drop;
+}
+# bug:context syntax error
+{
+    my $t = 0;
+    with_context {
+        $t++;
+    };
+    is($t,1,'with_context/invoke code bug');
 }

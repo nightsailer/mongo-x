@@ -56,7 +56,7 @@ is($col,$col2, 'switch context collection');
 {
     MongoX::Context::reset;
     MongoX::Context::boot host => $host,db => 'test';
-    MongoX::Context::with_context {
+    MongoX::Context::with_context sub {
         MongoX::Context::use_db 'test2';
         MongoX::Context::use_collection 'foo';
     };
@@ -64,23 +64,23 @@ is($col,$col2, 'switch context collection');
     is(MongoX::Context::context_db->name,'test','with_context/sandbox/db');
     is(MongoX::Context::context_collection,undef,'with_context/sandbox/collection');
 
-    MongoX::Context::with_context {
+    MongoX::Context::with_context sub {
         is(MongoX::Context::context_db->name,'test2','with_context/switch new db');
         is(MongoX::Context::context_collection->name,'foo','with_context/switch new collection');
-    } db => 'test2', collection => 'foo';
+    },db => 'test2', collection => 'foo';
 
-    MongoX::Context::with_context {
+    MongoX::Context::with_context sub {
         MongoX::Context::use_db 'test1';
-        MongoX::Context::with_context {
+        MongoX::Context::with_context sub {
             is(MongoX::Context::context_db->name,'test2','with_context/nested/db');
             is(MongoX::Context::context_collection->name,'foo2','with_context/nested/collection');
             
             MongoX::Context::use_db 'test4';
             
-        } db => 'test2',collection => 'foo2';
+        },db => 'test2',collection => 'foo2';
         is(MongoX::Context::context_db->name,'test1','with_context/nested/restore db,inner');
         is(MongoX::Context::context_collection->name,'foo1','with_context/nested/restor collection,inner');
-    } collection => 'foo1';
+    },collection => 'foo1';
 
     is(MongoX::Context::context_db->name,'test','with_context/sandbox/restor db,outer');
     is(MongoX::Context::context_collection,undef,'with_context/sandbox/restor collection,outer');
