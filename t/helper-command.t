@@ -17,7 +17,7 @@ BEGIN {
         plan skip_all => $@;
     }
     else {
-        plan tests => 36;
+        plan tests => 39;
     }
 }
 
@@ -252,7 +252,17 @@ REDUCE
     
     context_collection->drop;
 }
-
+{
+    use_collection 'mongox_test';
+    context_collection->drop;
+    my $oid = db_insert {foo => 1};
+    my $row = db_find_by_id $oid;
+    is($row->{foo},1,'db_find_by_id/oid');
+    $row = db_find_by_id $oid->value;
+    is($row->{foo},1,'db_find_by_id/id string');
+    db_remove_by_id $oid->value;
+    is(db_count,0,'db_remov_by_id');
+}
 TODO: {
     local $TODO = 'these collection shortcut not done.';
 }

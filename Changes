@@ -1,5 +1,9 @@
 Revision history for MongoX
 
+0.004 Fri Oct 22 2010 22:40:13 GMT+0800 (CST)
+  - add db_find_by_id, db_remove_by_id
+  - db_find_and_modify return undef if no result
+
 0.003 Fri Oct 15 2010 13:14:09 GMT+0800 (CST)
   - add db_ensure_index/db_drop_index/db_get_indexes helpers
  

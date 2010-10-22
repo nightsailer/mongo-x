@@ -2,7 +2,7 @@ NAME
     MongoX - DSL sugar for MongoDB
 
 VERSION
-    version 0.003
+    version 0.004
 
 SYNOPSIS
         # quick bootstrap, add connection and switch to db:'test'

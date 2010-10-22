@@ -51,7 +51,7 @@ my @TAG_COMMON = qw(
     db_update
     db_update_set
     db_find_one
-    
+
     db_find
     db_find_all
     db_find_and_modify
@@ -60,6 +60,9 @@ my @TAG_COMMON = qw(
     db_drop_index
     db_drop_indexes
     db_get_indexes
+
+    db_find_by_id
+    db_remove_by_id
 );
 # TODO: Replica Set commands
 my @TAG_RS = qw(
@@ -545,7 +548,7 @@ sub db_find_and_modify {
     }
     unless (ref $result) {
         if ($result eq 'No matching object found') {
-            return {};
+            return;
         }
         croak $result;
     }
@@ -778,6 +781,32 @@ sub db_get_indexes {
     return _collection->get_indexes;
 }
 
+=method db_find_by_id
+
+    my $row = db_find_by_id $oid_or_id_string
+
+Quick find_one by _id.
+
+=cut
+
+sub db_find_by_id {
+    my ($id) = @_;
+    $id = MongoDB::OID->new(value => "$id") unless ref $id eq 'MongoDB::OID';
+    db_find_one {_id => $id};
+}
+
+=method db_remove_by_id
+
+    db_remove_by_id $oid_or_id_string
+
+Quick remove by _id.
+
+=cut
+sub db_remove_by_id {
+    my ($id) = @_;
+    $id = MongoDB::OID->new(value => "$id") unless ref $id eq 'MongoDB::OID';
+    db_remove {_id => $id};
+}
 
 1;
 
